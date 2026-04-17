@@ -12,15 +12,15 @@
 
 ## File map
 
-| File | Action | Role |
-|------|--------|------|
-| `.gitignore` | Create | Ignore `node_modules/`, `dist/`, logs, env files. |
-| `tsconfig.json` | Create | Strict compile; `NodeNext`; `rootDir` `src`; `outDir` `dist`; `include` `src`. |
-| `src/index.ts` | Create | `console.log` hello world. |
-| `package.json` | Modify | Dev deps, scripts (`build`, `start`, `prestart`, `lint`, `lint:fix`, `format`, `format:check`, `check`); set `main` to `dist/index.js`. |
-| `eslint.config.js` | Create | Flat config: ignores, type-aware TS, Prettier last. |
-| `.prettierrc.json` | Create | Minimal Prettier defaults. |
-| `.prettierignore` | Create | Ignore `node_modules`, `dist`, lockfiles. |
+| File               | Action | Role                                                                                                                                    |
+| ------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gitignore`       | Create | Ignore `node_modules/`, `dist/`, logs, env files.                                                                                       |
+| `tsconfig.json`    | Create | Strict compile; `NodeNext`; `rootDir` `src`; `outDir` `dist`; `include` `src`.                                                          |
+| `src/index.ts`     | Create | `console.log` hello world.                                                                                                              |
+| `package.json`     | Modify | Dev deps, scripts (`build`, `start`, `prestart`, `lint`, `lint:fix`, `format`, `format:check`, `check`); set `main` to `dist/index.js`. |
+| `eslint.config.js` | Create | Flat config: ignores, type-aware TS, Prettier last.                                                                                     |
+| `.prettierrc.json` | Create | Minimal Prettier defaults.                                                                                                              |
+| `.prettierignore`  | Create | Ignore `node_modules`, `dist`, lockfiles.                                                                                               |
 
 Lockfile is created/updated by `npm install` (not hand-edited).
 
@@ -29,6 +29,7 @@ Lockfile is created/updated by `npm install` (not hand-edited).
 ### Task 1: Ignore build output and dependencies
 
 **Files:**
+
 - Create: `.gitignore`
 
 - [ ] **Step 1: Add `.gitignore`**
@@ -53,6 +54,7 @@ git commit -m "chore: ignore node_modules, dist, and env files"
 ### Task 2: TypeScript compiler configuration
 
 **Files:**
+
 - Create: `tsconfig.json`
 
 - [ ] **Step 1: Add `tsconfig.json`**
@@ -84,6 +86,7 @@ git commit -m "chore: add tsconfig for NodeNext ESM build to dist/"
 ### Task 3: Hello-world entrypoint
 
 **Files:**
+
 - Create: `src/index.ts`
 
 - [ ] **Step 1: Add `src/index.ts`**
@@ -104,6 +107,7 @@ git commit -m "feat: add hello world entrypoint"
 ### Task 4: Dependencies and npm scripts
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Replace root `package.json` with the following** (preserve `name`, `version`, `description`, `homepage`, `bugs`, `repository`, `license`, `author` if you prefer to keep them; the block below keeps them as in the current repo)
@@ -169,6 +173,7 @@ git commit -m "chore: add TypeScript, ESLint, Prettier devDependencies and scrip
 ### Task 5: ESLint flat config (type-aware TypeScript + Prettier compatibility)
 
 **Files:**
+
 - Create: `eslint.config.js`
 
 - [ ] **Step 1: Add `eslint.config.js`**
@@ -211,6 +216,7 @@ git commit -m "chore: add ESLint flat config with typescript-eslint and prettier
 ### Task 6: Prettier configuration and ignore file
 
 **Files:**
+
 - Create: `.prettierrc.json`
 - Create: `.prettierignore`
 
@@ -243,6 +249,7 @@ git commit -m "chore: add Prettier config and ignore file"
 ### Task 7: End-to-end verification
 
 **Files:**
+
 - None (commands only)
 
 - [ ] **Step 1: Run build**
@@ -302,16 +309,16 @@ git commit -m "style: apply prettier formatting"
 
 ## Spec coverage checklist
 
-| Spec requirement | Task(s) |
-|------------------|---------|
-| `src/index.ts` hello `console.log` | Task 3 |
-| `tsc` → `dist/`, Node run | Tasks 2, 4, 7 |
-| ESM / `NodeNext` alignment | Tasks 2, 4 |
-| ESLint flat + type-aware `typescript-eslint` + `eslint-config-prettier` last | Tasks 4, 5 |
-| Prettier separate; ignore `dist` / `node_modules` | Tasks 4, 6 |
-| `build`, `start`, `lint`, `lint:fix`, `format`, `format:check` | Task 4 |
-| `.gitignore` for `node_modules`, `dist` | Task 1 |
-| Verification (install, build, start, lint, format check) | Task 7 |
+| Spec requirement                                                             | Task(s)       |
+| ---------------------------------------------------------------------------- | ------------- |
+| `src/index.ts` hello `console.log`                                           | Task 3        |
+| `tsc` → `dist/`, Node run                                                    | Tasks 2, 4, 7 |
+| ESM / `NodeNext` alignment                                                   | Tasks 2, 4    |
+| ESLint flat + type-aware `typescript-eslint` + `eslint-config-prettier` last | Tasks 4, 5    |
+| Prettier separate; ignore `dist` / `node_modules`                            | Tasks 4, 6    |
+| `build`, `start`, `lint`, `lint:fix`, `format`, `format:check`               | Task 4        |
+| `.gitignore` for `node_modules`, `dist`                                      | Task 1        |
+| Verification (install, build, start, lint, format check)                     | Task 7        |
 
 Optional items from spec (`prestart`, `check`) are included in Task 4 scripts.
 
