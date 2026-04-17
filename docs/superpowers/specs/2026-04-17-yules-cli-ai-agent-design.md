@@ -62,14 +62,14 @@ Guidelines:
 
 ## Files and responsibilities
 
-| Path | Responsibility |
-|------|----------------|
-| `src/cli.ts` | Binary entry: shebang, dotenv from `cwd`, env validation, call agent runner. |
-| `src/agent/run.ts` | Interactive loop and `streamText` integration. |
-| `src/agent/system/prompt.ts` | `SYSTEM_PROMPT` and future prompt constants. |
-| `package.json` | `dependencies` for `ai`, `@ai-sdk/openai`, `dotenv`; `"bin": { "yules-cli": "dist/cli.js" }` (exact path must match compiled output). |
-| `.env.example` | `OPENAI_API_KEY=` placeholder (e.g. `your-api-key-here`). |
-| `.gitignore` | Must allow **committing** `.env.example` while keeping `.env` ignored. If the pattern `.env.*` currently ignores `.env.example`, add an exception such as `!.env.example`. |
+| Path                         | Responsibility                                                                                                                                                             |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/cli.ts`                 | Binary entry: shebang, dotenv from `cwd`, env validation, call agent runner.                                                                                               |
+| `src/agent/run.ts`           | Interactive loop and `streamText` integration.                                                                                                                             |
+| `src/agent/system/prompt.ts` | `SYSTEM_PROMPT` and future prompt constants.                                                                                                                               |
+| `package.json`               | `dependencies` for `ai`, `@ai-sdk/openai`, `dotenv`; `"bin": { "yules-cli": "dist/cli.js" }` (exact path must match compiled output).                                      |
+| `.env.example`               | `OPENAI_API_KEY=` placeholder (e.g. `your-api-key-here`).                                                                                                                  |
+| `.gitignore`                 | Must allow **committing** `.env.example` while keeping `.env` ignored. If the pattern `.env.*` currently ignores `.env.example`, add an exception such as `!.env.example`. |
 
 ## npm scripts (existing + usage)
 
