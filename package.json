@@ -1,0 +1,36 @@
+{
+  "name": "yules-ai",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/hungtsou/yules-ai#readme",
+  "bugs": {
+    "url": "https://github.com/hungtsou/yules-ai/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hungtsou/yules-ai.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run build && npm run lint && npm run format:check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.58.2"
+  }
+}
