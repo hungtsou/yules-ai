@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a globally installable `yules-ai` binary that runs an interactive, streaming terminal chat using Vercel AI SDK (`streamText`), `@ai-sdk/openai` (`gpt-5-mini`), cwd-based `.env` loading, and the file layout from `docs/superpowers/specs/2026-04-17-yules-cli-ai-agent-design.md`.
+**Goal:** Ship a globally installable `yules-ai` binary that runs an interactive, streaming terminal chat using Vercel AI SDK (`streamText`), `@ai-sdk/openai` (`gpt-5-mini`), cwd-based `.env` loading, and the file layout from `docs/features/specs/2026-04-17-yules-cli-ai-agent-design.md`.
 
 **Architecture:** `src/cli.ts` loads `dotenv`, validates `OPENAI_API_KEY`, then calls `runAgent()` from `src/agent/run.ts`. The runner maintains `ModelMessage[]`, uses readline for input, serializes async line handling with a promise chain to avoid overlapping streams, and streams assistant text via `result.textStream` to stdout. No integration tests; no new test runner unless a trivial pure helper is extracted (optional; skipped by default).
 

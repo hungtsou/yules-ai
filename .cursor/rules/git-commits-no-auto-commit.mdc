@@ -1,0 +1,44 @@
+---
+description: No auto-commit without approval; use repo git author; conventional commits
+alwaysApply: true
+---
+
+# Git commits (skills, agents, subagents)
+
+## No commits without explicit approval
+
+- Do **not** run `git commit`, `git commit --amend`, interactive rebases that rewrite commits, or any tool that creates commits **unless the user has explicitly approved that specific commit** (e.g. “commit this”, “create a commit with message …”, approval in a PR/merge workflow they control).
+- Staging (`git add`) is allowed when the user asked to prepare changes; committing is not implied by “fix this” or “implement X” unless they clearly asked for a commit.
+- If completion hooks or automation would normally commit, **skip the commit** and leave changes staged or unstaged per user preference; never commit to satisfy a skill loop.
+
+## Commit author = repository identity
+
+- When creating a commit the user approved, **do not** invent or substitute `user.name` / `user.email`.
+- Prefer a plain `git commit` with no `--author` so Git uses this repo’s configured author.
+- If you must pass author explicitly (e.g. scripted commit), set it to match the current configuration:
+
+```bash
+git config user.name
+git config user.email
+```
+
+Do not use placeholder or generic authors (e.g. “Cursor Bot”, “Agent”) unless the user asked for that.
+
+## Conventional Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for the **subject line** when you generate a commit message:
+
+- Format: `type(scope): description` (scope optional; use when it clarifies the change).
+- Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`.
+- Description: imperative mood, lowercase start after the colon, no trailing period on the subject.
+- Body/footer: optional; use `BREAKING CHANGE:` in footer or `!` after type for breaking changes.
+
+Examples:
+
+```text
+feat(cli): add verbose logging flag
+
+fix(agent): handle empty tool response
+
+chore: bump devDependencies
+```

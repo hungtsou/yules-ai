@@ -1,0 +1,26 @@
+---
+description: Store plans and specs under docs/features (not docs/superpowers)
+alwaysApply: true
+---
+
+# Plans and specs location
+
+Use these directories for all new planning and specification documents:
+
+| Artifact | Path |
+|----------|------|
+| **Plans** (implementation plans, roadmaps, step-by-step work) | `docs/features/plans/` |
+| **Specs** (design docs, requirements, architecture notes) | `docs/features/specs/` |
+
+## Naming
+
+Prefer dated, kebab-case filenames so files sort chronologically, for example:
+
+- `docs/features/plans/2026-04-17-example-feature.md`
+- `docs/features/specs/2026-04-17-example-feature-design.md`
+
+## Do not use for new work
+
+Do **not** create new plans or specs under `docs/superpowers/plans/` or `docs/superpowers/specs/`. That layout came from the Superpowers plugin; this project standardizes on **`docs/features/`** instead.
+
+If you open or edit existing files still under `docs/superpowers/`, consider moving them to the matching path under `docs/features/` and updating any internal links.
