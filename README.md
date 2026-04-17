@@ -39,11 +39,11 @@ npm run build
 npm install -g .
 ```
 
-Then run `yules-cli` from any folder that contains a `.env` with `OPENAI_API_KEY` set:
+Then run `yules-ai` from any folder that contains a `.env` with `OPENAI_API_KEY` set:
 
 ```bash
 cd /path/to/your/project
-yules-cli
+yules-ai
 ```
 
 Use **Ctrl+D** (EOF) or **Ctrl+C** to leave the session.

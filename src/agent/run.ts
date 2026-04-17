@@ -39,7 +39,7 @@ export async function runAgent(): Promise<void> {
       messages.push({ role: 'assistant', content: full });
     } catch (err) {
       console.error(
-        'yules-cli:',
+        'yules-ai:',
         err instanceof Error ? err.message : String(err),
       );
     }
@@ -53,7 +53,7 @@ export async function runAgent(): Promise<void> {
         .then(() => processLine(line))
         .catch((err: unknown) => {
           console.error(
-            'yules-cli:',
+            'yules-ai:',
             err instanceof Error ? err.message : String(err),
           );
           output.write('You: ');
@@ -72,7 +72,7 @@ export async function runAgent(): Promise<void> {
     });
 
     output.write('\n');
-    output.write('yules-cli — interactive chat (Ctrl+D or Ctrl+C to exit)\n\n');
+    output.write('yules-ai — interactive chat (Ctrl+D or Ctrl+C to exit)\n\n');
     output.write('You: ');
   });
 }

@@ -1,8 +1,8 @@
-# yules-cli AI agent Implementation Plan
+# yules-ai CLI agent Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a globally installable `yules-cli` binary that runs an interactive, streaming terminal chat using Vercel AI SDK (`streamText`), `@ai-sdk/openai` (`gpt-5-mini`), cwd-based `.env` loading, and the file layout from `docs/superpowers/specs/2026-04-17-yules-cli-ai-agent-design.md`.
+**Goal:** Ship a globally installable `yules-ai` binary that runs an interactive, streaming terminal chat using Vercel AI SDK (`streamText`), `@ai-sdk/openai` (`gpt-5-mini`), cwd-based `.env` loading, and the file layout from `docs/superpowers/specs/2026-04-17-yules-cli-ai-agent-design.md`.
 
 **Architecture:** `src/cli.ts` loads `dotenv`, validates `OPENAI_API_KEY`, then calls `runAgent()` from `src/agent/run.ts`. The runner maintains `ModelMessage[]`, uses readline for input, serializes async line handling with a promise chain to avoid overlapping streams, and streams assistant text via `result.textStream` to stdout. No integration tests; no new test runner unless a trivial pure helper is extracted (optional; skipped by default).
 
@@ -134,7 +134,7 @@ export async function runAgent(): Promise<void> {
       messages.push({ role: 'assistant', content: full });
     } catch (err) {
       console.error(
-        'yules-cli:',
+        'yules-ai:',
         err instanceof Error ? err.message : String(err),
       );
     }
@@ -148,7 +148,7 @@ export async function runAgent(): Promise<void> {
         .then(() => processLine(line))
         .catch((err: unknown) => {
           console.error(
-            'yules-cli:',
+            'yules-ai:',
             err instanceof Error ? err.message : String(err),
           );
           output.write('You: ');
@@ -167,7 +167,7 @@ export async function runAgent(): Promise<void> {
     });
 
     output.write('\n');
-    output.write('yules-cli — interactive chat (Ctrl+D or Ctrl+C to exit)\n\n');
+    output.write('yules-ai — interactive chat (Ctrl+D or Ctrl+C to exit)\n\n');
     output.write('You: ');
   });
 }
@@ -194,7 +194,7 @@ git commit -m "feat(agent): interactive streaming chat loop"
 
 - Create: `src/cli.ts` (first line shebang; `tsc` emits it to `dist/cli.js`)
 - Delete: `src/index.ts`
-- Modify: `package.json` — `"main": "dist/cli.js"`, `"bin": { "yules-cli": "dist/cli.js" }`, `"start": "node dist/cli.js"`
+- Modify: `package.json` — `"main": "dist/cli.js"`, `"bin": { "yules-ai": "dist/cli.js" }`, `"start": "node dist/cli.js"`
 
 - [ ] **Step 1: Add `src/cli.ts`**
 
@@ -208,13 +208,13 @@ config({ quiet: true });
 const key = process.env.OPENAI_API_KEY?.trim();
 if (!key) {
   console.error(
-    'yules-cli: OPENAI_API_KEY is missing or empty. Create a .env file in your current working directory with OPENAI_API_KEY set (this CLI loads .env from cwd).',
+    'yules-ai: OPENAI_API_KEY is missing or empty. Create a .env file in your current working directory with OPENAI_API_KEY set (this CLI loads .env from cwd).',
   );
   process.exit(1);
 }
 
 runAgent().catch((err: unknown) => {
-  console.error('yules-cli:', err instanceof Error ? err.message : String(err));
+  console.error('yules-ai:', err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
 ```
@@ -224,7 +224,7 @@ runAgent().catch((err: unknown) => {
 Set:
 
 - `"main": "dist/cli.js"`
-- `"bin": { "yules-cli": "dist/cli.js" }`
+- `"bin": { "yules-ai": "dist/cli.js" }`
 - `"start": "node dist/cli.js"`
 
 - [ ] **Step 3: Remove `src/index.ts`**
@@ -255,7 +255,7 @@ Expected: stderr message about `OPENAI_API_KEY`, exit code `1`.
 
 ```bash
 git add src/cli.ts package.json src/index.ts
-git commit -m "feat(cli): yules-cli entrypoint and global bin"
+git commit -m "feat(cli): yules-ai entrypoint and global bin"
 ```
 
 ---
@@ -278,7 +278,7 @@ git commit -m "feat(cli): yules-cli entrypoint and global bin"
 | `streamText`, OpenAI `gpt-5-mini`, `SYSTEM_PROMPT`             | Tasks 2–3 |
 | cwd `.env`, `OPENAI_API_KEY`, fail fast                        | Task 1, 4 |
 | `src/cli.ts`, `src/agent/run.ts`, `src/agent/system/prompt.ts` | Tasks 2–4 |
-| Global `yules-cli` bin                                         | Task 4    |
+| Global `yules-ai` bin                                          | Task 4    |
 | `.env.example`, `!.env.example`                                | Task 1    |
 | Streaming, in-memory history, no assistant append on failure   | Task 3    |
 | Ctrl+C / Ctrl+D exit                                           | Task 3–4  |
@@ -291,4 +291,4 @@ No placeholder steps; all file paths explicit.
 
 1. `npm run build && npm run lint && npm run format:check`
 2. With a real `OPENAI_API_KEY` in project `.env`: `npm start` — multi-turn chat streams; Ctrl+D exits 0.
-3. `npm pack` or `npm i -g .` then `yules-cli` from a folder with `.env` — same behavior.
+3. `npm pack` or `npm i -g .` then `yules-ai` from a folder with `.env` — same behavior.

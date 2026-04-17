@@ -15,7 +15,7 @@
   "type": "module",
   "main": "dist/cli.js",
   "bin": {
-    "yules-cli": "dist/cli.js"
+    "yules-ai": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
