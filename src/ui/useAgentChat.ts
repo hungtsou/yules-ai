@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ModelMessage } from 'ai';
-import { streamReply } from '../agent/chat.js';
+import { runAgent } from '../agent/run.js';
 
 export type ChatStatus = 'idle' | 'streaming';
 
@@ -42,7 +42,7 @@ export function useAgentChat(): UseAgentChat {
       void (async () => {
         let accumulated = '';
         try {
-          for await (const chunk of streamReply(nextMessages)) {
+          for await (const chunk of runAgent(nextMessages)) {
             if (!mountedRef.current) return;
             accumulated += chunk;
             setStreamingText(accumulated);

@@ -2,7 +2,7 @@ import { streamText, type ModelMessage } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { SYSTEM_PROMPT } from './system/prompt.js';
 
-export async function* streamReply(
+export async function* runAgent(
   messages: ModelMessage[],
 ): AsyncGenerator<string, void, void> {
   const result = streamText({
