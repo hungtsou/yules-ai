@@ -19,6 +19,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "postbuild": "node -e \"const fs=require('fs'); if(fs.existsSync('dist/cli.js')) fs.chmodSync('dist/cli.js', 0o755)\"",
     "prestart": "npm run build",
     "start": "node dist/cli.js",
     "lint": "eslint src",
