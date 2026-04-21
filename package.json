@@ -30,6 +30,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.3",
@@ -39,6 +40,10 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.53",
     "ai": "^6.0.168",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "ink": "^6.8.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.5"
   }
 }

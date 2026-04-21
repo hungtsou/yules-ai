@@ -1,288 +1,179 @@
-# yules-ai CLI: React + Ink terminal UI with tools, approval, and context management
+# yules-ai CLI: Ink + React terminal UI
 
 ## Context
 
-Today `yules-ai` is a Node/TS ESM CLI (`tsc` → `dist/`) whose runtime is a `readline` loop in `src/agent/run.ts` that streams `streamText` output line-by-line to stdout. `AGENTS.md` states that **Ink is the intended terminal UI** and that the product's capabilities include filesystem, shell, and web search tools — none of which are wired up yet.
+`yules-ai` is an ESM TypeScript Node CLI. Today the interactive chat loop in `src/agent/run.ts` is **readline-based**: it writes a `You: ` prompt, reads lines, calls `streamText` from the Vercel AI SDK (`openai('gpt-5-mini')`), and streams tokens directly to stdout. `src/cli.ts` loads `.env` from `cwd`, validates `OPENAI_API_KEY`, and invokes the runner.
 
-This spec replaces the `readline` loop with a **React + Ink** interactive UI and adds the tool, approval, and context-management stack needed to make that UI meaningful. The shape closely follows the reference repo [`Hendrixer/agents-v2@done`](https://github.com/Hendrixer/agents-v2/tree/done/src), scoped to this project's product intent.
+This spec replaces that loop with a small **React + [Ink](https://github.com/vadimdemedes/ink)** terminal UI. Scope is intentionally kept to a simple demo — nice-looking, functional, not over-engineered.
 
 ## Goals
 
-1. **Ink-driven CLI.** `yules-ai` renders a React + Ink app; the old `readline` loop is removed. UI owns conversational state and drives the agent.
-2. **Callback-based agent API.** Refactor `runAgent` from a self-contained I/O loop into a **single-turn, callback-driven** function the UI invokes per user submit.
-3. **Tool support.** Register filesystem (`readFile`, `writeFile`, `listFiles`, `deleteFile`), shell (`runCommand`), and web search (`webSearch`) tools.
-4. **Approval flow.** Only destructive / side-effecting tools (`writeFile`, `deleteFile`, `runCommand`) prompt the user. Read-only tools (`readFile`, `listFiles`, `webSearch`) auto-approve.
-5. **Context management.** Estimate per-turn token usage against the model's context window; **compact** history when a threshold is crossed; display usage in the UI.
-6. **Keep packaging unchanged.** `tsc → dist/`, `bin: dist/cli.js`, global install + cwd `.env` behavior preserved. Model stays `openai('gpt-5-mini')`.
+1. Render an interactive chat UI in the terminal using React and Ink (TypeScript, `.tsx`).
+2. Preserve existing chat behavior: streaming assistant tokens, in-memory multi-turn history, `openai('gpt-5-mini')` + `SYSTEM_PROMPT`, `.env` loaded from `cwd`.
+3. Refactor the current agent so streaming can be consumed by a React component (pure async-iterable producer, not a readline loop).
+4. Clean exit on Ctrl+C with exit code 0. Session survives per-request API errors.
 
 ## Non-goals
 
-- Porting the reference's `executeCode` JS-sandbox tool — not in `AGENTS.md` product goals.
-- Porting `@lmnr-ai/lmnr` telemetry — not in this project's stack.
-- Persisting chat history across processes.
-- An eval harness.
-- New tools beyond the reference set above.
-- Automated tests in this slice (manual verification only; a vitest suite is a follow-up spec).
-- MCP, subagents, slash commands.
+- Slash commands (`/clear`, `/exit`), keyboard shortcuts beyond Ctrl+C.
+- Persisting chat history to disk or resuming sessions.
+- Tools, subagents, or MCP.
+- Markdown rendering, syntax highlighting, or custom word-wrap logic.
+- Automated tests (manual verification only, matching existing project norms).
+- Non-TTY fallback (if stdout is not a TTY, Ink's default behavior is acceptable).
 
-## Architecture
+## Dependencies
 
-### File layout
+Add runtime dependencies:
 
-Everything below is **new** unless stated otherwise. Rewrites are marked.
+- `react`
+- `ink`
+- `ink-text-input`
+- `ink-spinner`
+
+Add dev dependency:
+
+- `@types/react`
+
+Keep existing: `ai`, `@ai-sdk/openai`, `dotenv`.
+
+## TypeScript configuration
+
+Update `tsconfig.json` to support JSX:
+
+- `"jsx": "react-jsx"` so `.tsx` files compile with the automatic runtime (no explicit `import React` required for JSX).
+- `include` remains `["src/**/*.ts"]`; broaden to `["src/**/*.ts", "src/**/*.tsx"]` so the compiler picks up the UI files.
+
+ESLint/Prettier configs require no changes for this slice (ESLint already parses TS; Prettier handles `.tsx` natively).
+
+## File layout
 
 ```text
 src/
-├── cli.ts                              # rewritten: env check → render(<App/>)
-├── types.ts                            # AgentCallbacks, ToolApprovalRequest, ToolCallInfo, TokenUsageInfo, ModelLimits
-├── agent/
-│   ├── run.ts                          # rewritten: single-turn, callback-driven
-│   ├── executeTool.ts                  # dispatch a tool call to its executor
-│   ├── system/
-│   │   ├── prompt.ts                   # unchanged (reference uses same prompt)
-│   │   └── filterMessages.ts           # strip model-incompatible messages
-│   ├── context/
-│   │   ├── index.ts                    # re-exports
-│   │   ├── modelLimits.ts              # per-model context-window table
-│   │   ├── tokenEstimator.ts           # estimateMessagesTokens + percentage helpers
-│   │   └── compaction.ts               # summarize history when over threshold
-│   └── tools/
-│       ├── index.ts                    # tool registry + requiresApproval()
-│       ├── file.ts                     # readFile, writeFile, listFiles, deleteFile
-│       ├── shell.ts                    # runCommand (shelljs)
-│       └── webSearch.ts                # openai.tools.webSearch({})
-└── ui/
-    ├── index.tsx                       # barrel re-exports
-    ├── App.tsx                         # top-level Ink app + callbacks wiring
-    └── components/
-        ├── Input.tsx                   # prompt line (Ink useInput)
-        ├── MessageList.tsx             # chat transcript
-        ├── Spinner.tsx                 # ink-spinner wrapper
-        ├── ToolCall.tsx                # one tool-call card (pending/complete)
-        ├── ToolApproval.tsx            # y/n approval prompt
-        └── TokenUsage.tsx              # context-window usage bar
+  cli.ts                     # env check + render(<App/>)
+  agent/
+    system/prompt.ts         # unchanged
+    chat.ts                  # new: streamReply(messages) pure async-iterable wrapper around streamText
+  ui/
+    App.tsx                  # state owner: messages, status, error; mounts children
+    useAgentChat.ts          # hook: exposes { messages, streamingText, status, error, send }
+    components/
+      Header.tsx             # title + hint line
+      MessageList.tsx        # renders committed history + in-progress streaming message
+      Message.tsx            # one row with colored 'You' / 'Yules' label
+      InputBar.tsx           # ink-text-input with inline spinner when streaming
+      ErrorLine.tsx          # red inline error above the input bar
 ```
 
-### Build and runtime
+Delete:
 
-- **Compile:** keep `tsc → dist/`. `bin: dist/cli.js` unchanged.
-- **tsconfig.json** additions: `"jsx": "react-jsx"`, include `src/**/*.tsx`. Existing `NodeNext` module settings stay.
-- **Relative imports** inside `src/` continue to use the project's current ESM convention (`.js` extensions on compiled relative imports). We do **not** adopt the reference's `.tsx` / `.ts` runtime-import style.
-- **Dependencies added** to `package.json`:
-  - prod: `react@^19`, `ink@^6`, `ink-spinner@^5`, `zod@^4`, `shelljs@^0.10`
-  - dev: `@types/react@^19`, `@types/shelljs@^0.8`
-- `@ai-sdk/openai` must expose `openai.tools.webSearch({})` as a provider tool; if the repo's current pinned version does not, bump to the minimum version that does as part of implementation.
+- `src/agent/run.ts` (replaced by `App.tsx` + `useAgentChat.ts` + `chat.ts`).
+- `src/ui` (empty placeholder file; the directory `src/ui/` takes its place).
 
-### Agent API contract
+## Architecture
 
-`src/agent/run.ts` exports one function. It performs no terminal I/O; the UI owns I/O via callbacks.
+### Entry (`src/cli.ts`)
+
+- Keep shebang `#!/usr/bin/env node`.
+- Keep `dotenv` load from `cwd` and the `OPENAI_API_KEY` presence check (fail fast with stderr message + non-zero exit code).
+- Replace `runAgent()` call with:
+  - `import { render } from 'ink'`
+  - `import { App } from './ui/App.js'`
+  - `render(<App/>)`
+- The returned Ink instance resolves when the app unmounts (Ctrl+C). Let the process exit normally after that.
+
+### Agent core (`src/agent/chat.ts`)
+
+Expose a single pure function:
 
 ```ts
-// src/types.ts (abridged)
-export interface AgentCallbacks {
-  onToken: (token: string) => void;
-  onToolCallStart: (name: string, args: unknown) => void;
-  onToolCallEnd: (name: string, result: string) => void;
-  onComplete: (response: string) => void;
-  onToolApproval: (name: string, args: unknown) => Promise<boolean>;
-  onTokenUsage?: (usage: TokenUsageInfo) => void;
-}
-
-export interface TokenUsageInfo {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  contextWindow: number;
-  threshold: number; // 0..1
-  percentage: number; // 0..100
-}
-
-// src/agent/run.ts
-export async function runAgent(
-  userMessage: string,
-  history: ModelMessage[],
-  callbacks: AgentCallbacks,
-): Promise<ModelMessage[]>;
+export async function* streamReply(
+  messages: ModelMessage[],
+): AsyncGenerator<string, void, void> { ... }
 ```
 
-### Agent turn loop
+Internally it calls `streamText({ model: openai('gpt-5-mini'), system: SYSTEM_PROMPT, messages })` and yields chunks from `result.textStream`. No I/O, no readline, no side effects on `messages`. The caller owns history mutation.
 
-Each `runAgent` call runs exactly one user turn end-to-end, including any tool-call rounds, then returns the updated `ModelMessage[]` history:
+### UI state (`src/ui/useAgentChat.ts`)
 
-1. `workingHistory = filterCompatibleMessages(history)` — strip messages the current model can't accept.
-2. `preCheck = estimateMessagesTokens([system, ...workingHistory, user])`.
-3. If `isOverThreshold(preCheck.total, contextWindow)` → `workingHistory = await compactConversation(workingHistory, model)`.
-4. `messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...workingHistory, { role: 'user', content: userMessage }]`.
-5. `reportTokenUsage(messages)` via `onTokenUsage?` (no-op if callback absent).
-6. Enter the tool-call loop:
-   1. `result = streamText({ model: openai('gpt-5-mini'), messages, tools })` — **no** telemetry options.
-   2. Iterate `result.fullStream`:
-      - `text-delta` → accumulate `currentText`, `callbacks.onToken(chunk.text)`.
-      - `tool-call` → push to local `toolCalls[]`, `callbacks.onToolCallStart(name, input)`.
-   3. On stream error: if `currentText` is empty and message is `"No output generated"`, emit a fallback apology to `onToken` and break the outer loop; otherwise if `currentText` is non-empty, continue (preserve partial text); otherwise rethrow.
-   4. `fullResponse += currentText`. `finishReason = await result.finishReason`.
-   5. If `finishReason !== 'tool-calls'` or `toolCalls.length === 0`: append `result.response.messages` to `messages`, report tokens, break.
-   6. Otherwise append response messages, report tokens, then for each `tc` of `toolCalls` in order:
-      - If `requiresApproval(tc.toolName)`: `approved = await callbacks.onToolApproval(tc.toolName, tc.args)`; if `false`, set `rejected = true` and break the for-loop.
-      - Otherwise `approved = true` implicitly (auto-approved).
-      - `result = await executeTool(tc.toolName, tc.args)`; `callbacks.onToolCallEnd(name, result)`.
-      - Append a `tool-result` message part to `messages` (shape matches AI SDK v6: `{ role: 'tool', content: [{ type: 'tool-result', toolCallId, toolName, output: { type: 'text', value: result } }] }`). Report tokens.
-   7. If `rejected`, break outer loop.
-   8. Otherwise continue outer loop (the model will react to the tool results).
-7. `callbacks.onComplete(fullResponse)`. Return `messages`.
+Custom hook that owns chat state:
 
-### Tools
+- `messages: ModelMessage[]` — committed turns only (user + assistant).
+- `streamingText: string` — in-progress assistant text; empty when idle.
+- `status: 'idle' | 'streaming' | 'error'`.
+- `error: string | null`.
+- `send(text: string): void` — no-op on empty trimmed input or while streaming.
 
-| Tool | File | Execution | Approval |
-|---|---|---|---|
-| `readFile(path)` | `agent/tools/file.ts` | local `fs.readFile` | no (auto) |
-| `writeFile(path, content)` | `agent/tools/file.ts` | local; `fs.mkdir` parents then `fs.writeFile` | **yes** |
-| `listFiles(directory=".")` | `agent/tools/file.ts` | local `fs.readdir({ withFileTypes: true })` | no (auto) |
-| `deleteFile(path)` | `agent/tools/file.ts` | local `fs.unlink` | **yes** |
-| `runCommand(command)` | `agent/tools/shell.ts` | `shelljs.exec(command, { silent: true })` | **yes** |
-| `webSearch` | `agent/tools/webSearch.ts` | OpenAI provider tool — `executeTool` returns a "provider tool" sentinel string; OpenAI runs it server-side | no (auto) |
+`send` flow:
 
-All `execute` functions catch their own errors and return a string (e.g. `"Error: File not found: <path>"`). The agent loop never needs to try/catch a tool execution.
+1. Append `{ role: 'user', content: trimmed }` to `messages`.
+2. Set `status = 'streaming'`, clear `error`, clear `streamingText`.
+3. Start an async task that iterates `streamReply(nextMessages)`, appending each chunk to `streamingText` via a ref + state update.
+4. On completion: commit `{ role: 'assistant', content: streamingText }` to `messages`, clear `streamingText`, set `status = 'idle'`.
+5. On thrown error: set `error` to the message, clear `streamingText`, set `status = 'idle'`. Do **not** commit partial assistant text.
 
-### Tool registry and approval gate
+The hook guards against stale async completions if the component unmounts mid-stream (use a `cancelled` flag tied to a `useEffect` cleanup on unmount or a ref set from a top-level unmount effect).
 
-```ts
-// src/agent/tools/index.ts (abridged)
-export const tools = { readFile, writeFile, listFiles, deleteFile, runCommand, webSearch };
-export type ToolName = keyof typeof tools;
+### Components
 
-const TOOLS_REQUIRING_APPROVAL: ReadonlySet<string> = new Set([
-  'writeFile',
-  'deleteFile',
-  'runCommand',
-]);
+- **`App.tsx`**: calls `useAgentChat()`; renders `<Box flexDirection="column">` with `<Header/>`, `<MessageList .../>`, optional `<ErrorLine/>`, `<InputBar .../>`.
+- **`Header.tsx`**: two-line static block: bold `yules-ai — interactive chat`, then dim `Ctrl+C to exit`.
+- **`MessageList.tsx`**: maps `messages` to `<Message/>`; when `status === 'streaming'`, appends one extra `<Message role="assistant" content={streamingText}/>` so tokens appear live.
+- **`Message.tsx`**: `<Box>` with a colored label (`cyan` for `You`, `green` for `Yules`) and the content. Let Ink handle wrapping via `<Text wrap="wrap">`.
+- **`InputBar.tsx`**: when `status === 'streaming'`, render `<Spinner/>` + dim `Yules is thinking…`. When idle, render a cyan `❯` prompt + `<TextInput>` bound to local state; on submit, trim, call `props.onSubmit`, clear local state.
+- **`ErrorLine.tsx`**: red `Error: <message>` line; rendered only when `error` is set.
 
-export function requiresApproval(name: string): boolean {
-  return TOOLS_REQUIRING_APPROVAL.has(name);
-}
-```
+### Data flow (per turn)
 
-`executeTool(name, args)` looks the tool up by name, calls `tool.execute(args, { toolCallId: '', messages: [] })`, stringifies the result, and returns it. If the tool has no `execute` (provider tool like `webSearch`), it returns `"Provider tool <name> — executed by model provider"`. Unknown tools return `"Unknown tool: <name>"`.
-
-### Context and token management
-
-- `agent/context/modelLimits.ts`: `getModelLimits(modelName)` returns `{ inputLimit, outputLimit, contextWindow }` from a hard-coded table; falls back to conservative defaults for unknown models.
-- `agent/context/tokenEstimator.ts`: `estimateMessagesTokens(messages)` returns `{ input, output, total }` using a character-count heuristic (≈ 4 chars/token); `calculateUsagePercentage(total, contextWindow)`.
-- `agent/context/compaction.ts`: `compactConversation(history, modelName)` summarizes the oldest N-2 messages into a single system-style assistant message via a separate `streamText` call; keeps the two most recent user/assistant turns verbatim. Returns a new `ModelMessage[]`.
-- `agent/context/index.ts` re-exports the above and exports `DEFAULT_THRESHOLD = 0.8` plus an `isOverThreshold(total, contextWindow)` helper.
-
-Compaction policy (matches reference):
-- Triggered only in `runAgent` step 3 above, before the turn begins.
-- After compaction, the turn proceeds against the compacted history; the UI is not notified directly but sees lower token usage via `onTokenUsage`.
-
-### System prompt
-
-`src/agent/system/prompt.ts` is **unchanged**. The reference repo uses the same prompt text we already have; the AI SDK injects tool names and schemas into the model context via the `tools` parameter of `streamText`, so the prompt doesn't need to enumerate them. Future specs may add tool-specific guidance if needed.
-
-### `filterCompatibleMessages`
-
-`agent/system/filterMessages.ts` exports `filterCompatibleMessages(history)`. It drops or rewrites messages that the current OpenAI model can't accept (e.g. tool-result messages whose shape has changed between SDK versions, or empty assistant messages). Implementation scope is: walk the array, keep only `user`, `assistant`, and `tool` roles with well-formed content; drop anything else.
-
-## UI
-
-### Component tree
-
-```text
-<App>
- ├─ header: title + "type 'exit' to quit"
- ├─ <MessageList messages={messages} />
- ├─ streaming assistant block  (shown while isLoading && streamingText)
- ├─ <ToolCall … /> × activeToolCalls.length  (hidden when pendingApproval set)
- ├─ <Spinner/>  (shown while isLoading && no streamingText && no activeToolCalls && no pendingApproval)
- ├─ <ToolApproval … />  (replaces <Input/> when pendingApproval set)
- ├─ <Input onSubmit={handleSubmit} disabled={isLoading} />
- └─ <TokenUsage usage={tokenUsage} />
-```
-
-### App state
-
-- `messages: Message[]` — committed turns for rendering (`{ role: 'user' | 'assistant', content: string }`).
-- `conversationHistory: ModelMessage[]` — AI-SDK history, threaded through each `runAgent` call.
-- `isLoading: boolean`, `streamingText: string`.
-- `activeToolCalls: ActiveToolCall[]` — `{ id, name, args, status: 'pending' | 'complete', result? }`.
-- `pendingApproval: ToolApprovalRequest | null` — `{ toolName, args, resolve }`.
-- `tokenUsage: TokenUsageInfo | null`.
-
-### Data flow per turn
-
-1. User types, presses enter → `handleSubmit(userInput)`.
-2. If `userInput.toLowerCase()` is `"exit"` or `"quit"` → `useApp().exit()` and return.
-3. Otherwise: append user message to `messages`, set `isLoading=true`, clear `streamingText` and `activeToolCalls`.
-4. `const newHistory = await runAgent(userInput, conversationHistory, callbacks)` where `callbacks`:
-   - `onToken(t)` → `setStreamingText(prev => prev + t)`.
-   - `onToolCallStart(name, args)` → push a pending `ActiveToolCall`.
-   - `onToolCallEnd(name, result)` → flip the matching pending entry to `complete` with `result`.
-   - `onComplete(response)` → if `response`, append assistant `Message`; clear `streamingText` and `activeToolCalls`.
-   - `onToolApproval(name, args)` → returns a `Promise<boolean>` whose `resolve` is captured in `pendingApproval`; `<ToolApproval>` calls it when the user picks y/n.
-   - `onTokenUsage(usage)` → `setTokenUsage(usage)`.
-5. On success: `setConversationHistory(newHistory)`.
-6. On exception: append an assistant message `"Error: <message>"`. Clear transient state in `finally`.
-
-### Input handling
-
-- `Input.tsx` uses Ink's `useInput` directly (no `ink-text-input` dependency). Handles: printable characters, backspace, left/right arrow (cursor), enter (submit), Ctrl+C (Ink default exit).
-- `ToolApproval.tsx` uses `useInput` to capture `y`/`n`/enter (enter = default No).
-
-### Visual detail
-
-- Header renders bold + accent color, title `yules-ai` (no emoji; the reference's 🤖 is optional and omitted for consistency with current stdout output).
-- `MessageList` renders each message with a colored role label (`› You` / `› Assistant`) and indented content.
-- Streaming block has a trailing gray cursor glyph (`▌`) until `onComplete`.
-- `ToolCall` shows name, truncated args JSON, and status pill (`pending` spinner / `complete` check).
-- `ToolApproval` shows the tool name and args and a `(y/N)` prompt.
-- `TokenUsage` shows `input/output/total` + a compact progress bar colored by threshold (green < 70%, yellow 70–85%, red ≥ 85%).
+1. User types in `InputBar` → Enter → `onSubmit(text)` → `send(text)`.
+2. `useAgentChat` appends the user message and kicks off `streamReply`.
+3. First token hides the spinner (because `status` stays `'streaming'` but the streaming message now has non-empty content; `InputBar` can show spinner only while `streamingText === ''`).
+4. Subsequent tokens append to `streamingText` → `MessageList` re-renders.
+5. Stream end → assistant message committed, status back to idle, input re-enabled.
+6. On error → error line shown, partial output discarded, input re-enabled.
 
 ## Error handling and signals
 
-- **Env missing:** unchanged from today. `cli.ts` prints `"yules-ai: OPENAI_API_KEY is missing or empty. Create a .env file …"` to stderr and exits 1 **before** Ink renders.
-- **Agent stream error:** caught in `App.handleSubmit`'s try/catch; a synthetic assistant message `"Error: <message>"` is appended, transient state cleared in `finally`. The Ink app keeps running.
-- **"No output generated" partial-failure:** handled inside `runAgent` (see turn loop, step 6.3). Produces a fallback apology that streams via `onToken` so the UI displays it normally.
-- **Tool execution errors:** caught inside each tool's `execute`; surfaced as result strings. The agent loop treats them as ordinary tool results and lets the model react.
-- **Tool rejection:** user picks "no" → `onToolApproval` resolves `false` → current turn breaks cleanly; assistant text emitted before the rejected call is still committed to history on the next turn boundary; UI input re-enables.
-- **Ctrl+C / Ctrl+D:** Ink's default handling terminates the process with exit code 0.
+- **Missing `OPENAI_API_KEY`:** handled in `cli.ts` before Ink mounts (unchanged from today). Print to stderr, exit non-zero.
+- **Stream/API errors:** surfaced via `ErrorLine`; REPL continues.
+- **Ctrl+C:** Ink's default (unmount + exit 0). No custom SIGINT handler.
+- **Empty input:** ignored (no-op, input stays focused).
+- **Submit while streaming:** prevented at the hook (`send` no-op) and visually (spinner replaces input).
 
 ## Files and responsibilities
 
-| Path | Responsibility |
-|---|---|
-| `src/cli.ts` (rewritten) | Shebang, `dotenv` from cwd, env validation, `render(React.createElement(App))`. No readline. |
-| `src/types.ts` (new) | `AgentCallbacks`, `ToolApprovalRequest`, `ToolCallInfo`, `TokenUsageInfo`, `ModelLimits`. |
-| `src/agent/run.ts` (rewritten) | Single-turn callback-driven loop; no terminal I/O. |
-| `src/agent/executeTool.ts` (new) | Dispatch tool name → `tool.execute(args, ctx)`; stringify result; handle provider tools and unknown tools. |
-| `src/agent/system/prompt.ts` (unchanged) | Existing `SYSTEM_PROMPT` text retained as-is. |
-| `src/agent/system/filterMessages.ts` (new) | `filterCompatibleMessages(history)`. |
-| `src/agent/context/*` (new) | `modelLimits`, `tokenEstimator`, `compaction`, `index`, `DEFAULT_THRESHOLD`, `isOverThreshold`. |
-| `src/agent/tools/*` (new) | `file.ts`, `shell.ts`, `webSearch.ts`, `index.ts` with registry + `requiresApproval`. |
-| `src/ui/*` (new) | Ink components and `App`. |
-| `tsconfig.json` (updated) | `"jsx": "react-jsx"`. |
-| `package.json` (updated) | Add prod + dev deps listed under Build and runtime. No changes to `bin` or scripts. |
+| Path                         | Responsibility                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `src/cli.ts`                 | Shebang, dotenv from `cwd`, env validation, `render(<App/>)`.                         |
+| `src/agent/chat.ts`          | `streamReply(messages)` async generator wrapping `streamText`; pure, no I/O.          |
+| `src/agent/system/prompt.ts` | `SYSTEM_PROMPT` (unchanged).                                                          |
+| `src/ui/App.tsx`             | Top-level component; wires the hook to children.                                      |
+| `src/ui/useAgentChat.ts`     | Chat state + streaming lifecycle.                                                     |
+| `src/ui/components/*.tsx`    | Presentational components (Header, MessageList, Message, InputBar, ErrorLine).        |
+| `tsconfig.json`              | Add `"jsx": "react-jsx"`; include `.tsx`.                                             |
+| `package.json`               | Add `react`, `ink`, `ink-text-input`, `ink-spinner` deps; add `@types/react` dev dep. |
 
 ## Verification (manual)
 
-Run from the repo root. Preconditions: a valid `.env` with `OPENAI_API_KEY` in the repo root (or cwd when invoking the installed binary).
+1. `npm run build` succeeds with no TS errors.
+2. `npm start` renders the header, prompt input, and a blinking cursor; typing a message and pressing Enter shows the user message, a spinner briefly, then streaming tokens under a green `Yules` label.
+3. Multi-turn context is preserved within one session.
+4. Running from a directory without a usable key fails before the Ink UI mounts, with a clear stderr message.
+5. Forcing an API error (e.g., temporarily invalid key after mount — or simulated error) shows a red error line and leaves the REPL usable.
+6. Ctrl+C exits cleanly with exit code 0.
 
-1. `npm run check` — build, lint, prettier all pass.
-2. `node dist/cli.js` — header renders; blinking cursor in input; no readline "You: " prompt.
-3. Send a plain prompt ("Say hi") — tokens stream into the assistant block; on completion, the block commits into `MessageList`; a `TokenUsage` row appears/updates.
-4. Ask a prompt that triggers a read-only tool (e.g. "list files in src"): a `ToolCall` pending card appears, **no approval prompt**, card flips to complete, assistant summarizes.
-5. Ask a prompt that triggers `writeFile` or `runCommand`: a `ToolApproval` panel replaces the input; pressing `y` executes the tool and the turn continues; pressing `n` ends the turn cleanly and re-enables input.
-6. Multi-turn: several turns grow the transcript; `TokenUsage` percentage grows; no crashes.
-7. `exit` or `quit` submission, or Ctrl+C, terminates the process with exit code 0.
-8. Running from a directory without `OPENAI_API_KEY` exits 1 before Ink renders, with the existing error message on stderr.
+## Notes
 
-## Migration notes
+- The removed commit `2472e6b` wiped a previous Ink attempt; this spec is a fresh, smaller pass. Do not assume any of the old file layout is still on disk.
+- Model ID `gpt-5-mini` stays in one place (`src/agent/chat.ts`); update there if the provider renames it.
+- `AGENTS.md` already names Ink as the intended terminal UI — this spec is what wires that intent into the codebase.
 
-- The rewrite removes the existing readline loop entirely; no code path keeps it as a fallback.
-- `SYSTEM_PROMPT` content changes; existing tests (none) or downstream consumers (none) do not depend on its text.
-- `package.json` gains new prod deps. Global reinstall (`npm i -g .`) required for users after this lands.
-- No changes to `bin` name, script names, `.env.example`, `.gitignore`, `.prettierignore`, or ESLint config. ESLint's flat config should already accept `.tsx` via `typescript-eslint`; if not, the implementation plan will add the minimum glob change.
+## Future: tools
 
-## Open points (for the implementation plan to resolve)
+Tools (filesystem, shell, web search) are on the product roadmap but **out of scope for this slice**. To keep this UI forward-compatible without building speculative tool UX now:
 
-- Exact `modelLimits` table contents (at minimum an entry for `gpt-5-mini` plus a conservative default). Reference uses `contextWindow: 400000` for gpt-5 family.
-- Whether `Input.tsx` needs history navigation (up/down arrow to recall previous prompts) — default: **no**, matches reference.
+- State uses the AI SDK's `ModelMessage[]` type, which already supports tool parts — the state shape will not need to change when tools land.
+- `Message.tsx` renders a single text bubble per message. When tools arrive, introduce a small `MessageParts.tsx` that switches on message part kind (`text` / `tool-call` / `tool-result`) and reuse it inside `Message.tsx`.
+- `streamReply` returns `AsyncIterable<string>` (text-only) for this slice. Switching to `result.fullStream` with a discriminated-union yield is a localized change in `src/agent/chat.ts` and the `useAgentChat` hook; no other component needs to know.
+
+UX decisions for tool rendering (inline vs. collapsible, approval prompts, long-running status, argument/result truncation) depend on real tool behavior and will be designed in a follow-up spec once at least one tool is wired into the agent.

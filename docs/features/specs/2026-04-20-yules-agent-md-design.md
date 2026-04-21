@@ -24,15 +24,15 @@ This spec is **vision-first** (see [Goals](#goals)): it describes intended produ
 
 Sections should appear in roughly this order:
 
-| Section | Purpose |
-|--------|---------|
-| **What Yules is** | AI assistant for generic questions and tasks; CLI / agent context. |
-| **Intended capabilities** | Filesystem operations, web search, shell—framed as **goals**, not “already shipped.” |
-| **Tech stack** | Node ESM, TypeScript, AI SDK, OpenAI, dotenv from cwd; **React + Ink** for terminal UI; optional one-line note on current entry (`cli.ts` / `agent/run.ts`) if useful. |
-| **Implementation note** | Vision may run ahead of code; verify `package.json` and `src/` before adding features. |
-| **Repository map** | Brief pointers: `src/cli.ts`, `src/agent/run.ts`, `src/agent/system/prompt.ts`. |
-| **Further reading** | `README.md`, relevant files in `docs/features/specs/`. |
-| **Guidance for implementers** | Follow existing patterns; keep secrets in `.env`; do not invent non-existent tool hooks. |
+| Section                       | Purpose                                                                                                                                                                |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **What Yules is**             | AI assistant for generic questions and tasks; CLI / agent context.                                                                                                     |
+| **Intended capabilities**     | Filesystem operations, web search, shell—framed as **goals**, not “already shipped.”                                                                                   |
+| **Tech stack**                | Node ESM, TypeScript, AI SDK, OpenAI, dotenv from cwd; **React + Ink** for terminal UI; optional one-line note on current entry (`cli.ts` / `agent/run.ts`) if useful. |
+| **Implementation note**       | Vision may run ahead of code; verify `package.json` and `src/` before adding features.                                                                                 |
+| **Repository map**            | Brief pointers: `src/cli.ts`, `src/agent/run.ts`, `src/agent/system/prompt.ts`.                                                                                        |
+| **Further reading**           | `README.md`, relevant files in `docs/features/specs/`.                                                                                                                 |
+| **Guidance for implementers** | Follow existing patterns; keep secrets in `.env`; do not invent non-existent tool hooks.                                                                               |
 
 Tone: direct, scannable, under ~120 lines if possible.
 
