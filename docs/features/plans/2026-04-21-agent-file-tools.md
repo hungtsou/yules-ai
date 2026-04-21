@@ -26,11 +26,11 @@
 
 ## File Structure
 
-| Path                            | Purpose                                                                                |
-| ------------------------------- | -------------------------------------------------------------------------------------- |
-| `src/agent/tools/file.ts`       | Four named `Tool` exports (`readFile`, `writeFile`, `deleteFile`, `listFiles`)         |
-| `src/agent/tools/index.ts`      | Barrel: `export * from './file.js';`                                                   |
-| `scripts/smoke-file-tools.mjs`  | Ad-hoc smoke script: round-trips all four tools against a temp directory               |
+| Path                           | Purpose                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `src/agent/tools/file.ts`      | Four named `Tool` exports (`readFile`, `writeFile`, `deleteFile`, `listFiles`) |
+| `src/agent/tools/index.ts`     | Barrel: `export * from './file.js';`                                           |
+| `scripts/smoke-file-tools.mjs` | Ad-hoc smoke script: round-trips all four tools against a temp directory       |
 
 No changes to `src/agent/run.ts`, `src/cli.ts`, `src/ui/**`, `evals/mocks/tools.ts`, `package.json`, or `tsconfig.json`.
 
@@ -100,9 +100,7 @@ export const deleteFile = tool({
 export const listFiles = tool({
   description: 'List files and directories at the given path.',
   inputSchema: z.object({
-    path: z
-      .string()
-      .describe('Directory path whose entries should be listed.'),
+    path: z.string().describe('Directory path whose entries should be listed.'),
   }),
   execute: async ({ path }) => {
     return await fsReaddir(path);
@@ -415,19 +413,19 @@ Plan checked against the spec on 2026-04-21.
 
 ### Spec coverage
 
-| Spec section                                       | Task(s) |
-| -------------------------------------------------- | ------- |
-| §1 Goal — four AI SDK Tools under `src/agent/tools/` | 1, 2    |
-| §2 Scope & non-goals (no runtime wiring)            | (respected across all tasks; verified in Task 5 Step 3) |
-| §3 File layout (`file.ts` + one-line `index.ts`)    | 1, 2    |
-| §4 Module contracts (descriptions, schemas, fs calls, return shapes) | 1 |
-| §4 Zod `.describe(...)` strings table               | 1       |
-| §5 Error handling (no try/catch, fs errors bubble)  | 1 (code), 4/5 (verified by smoke script's missing-path case) |
-| §6 Export shape (named exports + `export * from './file.js'`) | 1, 2 |
-| §7 Accepted risks                                   | noted in spec; no implementation work required |
-| §8 SOLID notes                                      | noted in spec; no implementation work required |
-| §9 Implementation constraints (ESM, `.js` extensions, strict tsc) | 1, 2, 3 |
-| §10 Acceptance checklist                            | 3, 5    |
+| Spec section                                                         | Task(s)                                                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------ |
+| §1 Goal — four AI SDK Tools under `src/agent/tools/`                 | 1, 2                                                         |
+| §2 Scope & non-goals (no runtime wiring)                             | (respected across all tasks; verified in Task 5 Step 3)      |
+| §3 File layout (`file.ts` + one-line `index.ts`)                     | 1, 2                                                         |
+| §4 Module contracts (descriptions, schemas, fs calls, return shapes) | 1                                                            |
+| §4 Zod `.describe(...)` strings table                                | 1                                                            |
+| §5 Error handling (no try/catch, fs errors bubble)                   | 1 (code), 4/5 (verified by smoke script's missing-path case) |
+| §6 Export shape (named exports + `export * from './file.js'`)        | 1, 2                                                         |
+| §7 Accepted risks                                                    | noted in spec; no implementation work required               |
+| §8 SOLID notes                                                       | noted in spec; no implementation work required               |
+| §9 Implementation constraints (ESM, `.js` extensions, strict tsc)    | 1, 2, 3                                                      |
+| §10 Acceptance checklist                                             | 3, 5                                                         |
 
 ### Placeholder scan
 

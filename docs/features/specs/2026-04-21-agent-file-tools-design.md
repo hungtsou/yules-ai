@@ -65,12 +65,12 @@ Every `path` field uses `z.string().describe('...')` with wording identical to
 the mock tools in `evals/mocks/tools.ts`, so model behavior stays consistent
 between eval and runtime.
 
-| Tool         | Input schema                            | `execute` body                       | Return      |
-| ------------ | --------------------------------------- | ------------------------------------ | ----------- |
-| `readFile`   | `{ path: string }`                      | `fs.readFile(path, 'utf8')`          | `string`    |
-| `writeFile`  | `{ path: string, content: string }`     | `fs.writeFile(path, content, 'utf8')`| `void`      |
-| `deleteFile` | `{ path: string }`                      | `fs.unlink(path)`                    | `void`      |
-| `listFiles`  | `{ path: string }`                      | `fs.readdir(path)`                   | `string[]`  |
+| Tool         | Input schema                        | `execute` body                        | Return     |
+| ------------ | ----------------------------------- | ------------------------------------- | ---------- |
+| `readFile`   | `{ path: string }`                  | `fs.readFile(path, 'utf8')`           | `string`   |
+| `writeFile`  | `{ path: string, content: string }` | `fs.writeFile(path, content, 'utf8')` | `void`     |
+| `deleteFile` | `{ path: string }`                  | `fs.unlink(path)`                     | `void`     |
+| `listFiles`  | `{ path: string }`                  | `fs.readdir(path)`                    | `string[]` |
 
 Tool descriptions (exact strings, copied from the mock registry for parity):
 
@@ -106,10 +106,18 @@ both are expected to surface to the model as-is.
 `file.ts` declares four top-level named exports:
 
 ```typescript
-export const readFile = tool({ /* ... */ });
-export const writeFile = tool({ /* ... */ });
-export const deleteFile = tool({ /* ... */ });
-export const listFiles = tool({ /* ... */ });
+export const readFile = tool({
+  /* ... */
+});
+export const writeFile = tool({
+  /* ... */
+});
+export const deleteFile = tool({
+  /* ... */
+});
+export const listFiles = tool({
+  /* ... */
+});
 ```
 
 `index.ts` contains:
