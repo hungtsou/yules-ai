@@ -49,21 +49,48 @@ export async function runAgent(
         callbacks.onToken(chunk.text);
         break;
       case 'tool-call':
-        callbacks.onToolCallStart(chunk.toolName, chunk.input);
+        callbacks.onToolCallStart(
+          chunk.toolCallId,
+          chunk.toolName,
+          chunk.input,
+        );
         break;
       case 'tool-result':
         callbacks.onToolCallEnd(
+          chunk.toolCallId,
           chunk.toolName,
           stringifyToolResult(chunk.output),
         );
         break;
       case 'tool-error':
-        callbacks.onToolCallEnd(chunk.toolName, errorToString(chunk.error));
+        callbacks.onToolCallEnd(
+          chunk.toolCallId,
+          chunk.toolName,
+          errorToString(chunk.error),
+          { error: true },
+        );
         break;
+      case 'tool-output-denied':
+        callbacks.onToolCallEnd(
+          chunk.toolCallId,
+          chunk.toolName,
+          'Tool execution was denied.',
+          { error: true },
+        );
+        break;
+      case 'error':
+        throw chunk.error instanceof Error
+          ? chunk.error
+          : new Error(errorToString(chunk.error));
+      case 'abort':
+        throw new Error(chunk.reason ?? 'Stream aborted.');
       default:
+        // text-start/end, reasoning-*, tool-input-*, start/finish-step, finish,
+        // sources, etc. — framing/metadata; no token or tool callback here.
         break;
     }
   }
 
-  return messages;
+  const response = await result.response;
+  return [...messages, ...response.messages];
 }
