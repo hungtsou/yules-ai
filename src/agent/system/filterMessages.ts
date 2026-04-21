@@ -1,4 +1,4 @@
-import type { ModelMessage } from "ai";
+import type { ModelMessage } from 'ai';
 /**
  * Filter conversation history to only include compatible message formats.
  * Provider tools (like webSearch) may return messages with formats that
@@ -9,21 +9,21 @@ export const filterCompatibleMessages = (
 ): ModelMessage[] => {
   return messages.filter((msg) => {
     // Keep user and system messages
-    if (msg.role === "user" || msg.role === "system") {
+    if (msg.role === 'user' || msg.role === 'system') {
       return true;
     }
 
     // Keep assistant messages that have text content
-    if (msg.role === "assistant") {
+    if (msg.role === 'assistant') {
       const content = msg.content;
-      if (typeof content === "string" && content.trim()) {
+      if (typeof content === 'string' && content.trim()) {
         return true;
       }
       // Check for array content with text parts
       if (Array.isArray(content)) {
         const hasTextContent = content.some((part: unknown) => {
-          if (typeof part === "string" && part.trim()) return true;
-          if (typeof part === "object" && part !== null && "text" in part) {
+          if (typeof part === 'string' && part.trim()) return true;
+          if (typeof part === 'object' && part !== null && 'text' in part) {
             const textPart = part as { text?: string };
             return textPart.text && textPart.text.trim();
           }
@@ -34,7 +34,7 @@ export const filterCompatibleMessages = (
     }
 
     // Keep tool messages
-    if (msg.role === "tool") {
+    if (msg.role === 'tool') {
       return true;
     }
 
