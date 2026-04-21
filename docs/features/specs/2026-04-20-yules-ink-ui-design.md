@@ -142,16 +142,16 @@ The hook guards against stale async completions if the component unmounts mid-st
 
 ## Files and responsibilities
 
-| Path                         | Responsibility                                                                                 |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| `src/cli.ts`                 | Shebang, dotenv from `cwd`, env validation, `render(<App/>)`.                                  |
-| `src/agent/chat.ts`          | `streamReply(messages)` async generator wrapping `streamText`; pure, no I/O.                   |
-| `src/agent/system/prompt.ts` | `SYSTEM_PROMPT` (unchanged).                                                                   |
-| `src/ui/App.tsx`             | Top-level component; wires the hook to children.                                               |
-| `src/ui/useAgentChat.ts`     | Chat state + streaming lifecycle.                                                              |
-| `src/ui/components/*.tsx`    | Presentational components (Header, MessageList, Message, InputBar, ErrorLine).                 |
-| `tsconfig.json`              | Add `"jsx": "react-jsx"`; include `.tsx`.                                                      |
-| `package.json`               | Add `react`, `ink`, `ink-text-input`, `ink-spinner` deps; add `@types/react` dev dep.          |
+| Path                         | Responsibility                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `src/cli.ts`                 | Shebang, dotenv from `cwd`, env validation, `render(<App/>)`.                         |
+| `src/agent/chat.ts`          | `streamReply(messages)` async generator wrapping `streamText`; pure, no I/O.          |
+| `src/agent/system/prompt.ts` | `SYSTEM_PROMPT` (unchanged).                                                          |
+| `src/ui/App.tsx`             | Top-level component; wires the hook to children.                                      |
+| `src/ui/useAgentChat.ts`     | Chat state + streaming lifecycle.                                                     |
+| `src/ui/components/*.tsx`    | Presentational components (Header, MessageList, Message, InputBar, ErrorLine).        |
+| `tsconfig.json`              | Add `"jsx": "react-jsx"`; include `.tsx`.                                             |
+| `package.json`               | Add `react`, `ink`, `ink-text-input`, `ink-spinner` deps; add `@types/react` dev dep. |
 
 ## Verification (manual)
 
