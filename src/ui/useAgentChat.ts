@@ -42,11 +42,16 @@ export function useAgentChat(): UseAgentChat {
       void (async () => {
         let accumulated = '';
         try {
-          for await (const chunk of runAgent(nextMessages)) {
-            if (!mountedRef.current) return;
-            accumulated += chunk;
-            setStreamingText(accumulated);
-          }
+          await runAgent(trimmed, nextMessages, {
+            onToken: (token) => {
+              accumulated += token;
+              if (mountedRef.current) setStreamingText(accumulated);
+            },
+            onToolCallStart: () => {},
+            onToolCallEnd: () => {},
+            onComplete: () => {},
+            onToolApproval: () => Promise.resolve(true),
+          });
           if (!mountedRef.current) return;
           setMessages((prev) => [
             ...prev,
