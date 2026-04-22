@@ -10,6 +10,8 @@ Laminar.initialize({
   projectApiKey: process.env.LMNR_PROJECT_API_KEY,
 });
 
+export const MODEL_NAME = 'gpt-5-mini';
+
 function stringifyToolResult(value: unknown): string {
   if (typeof value === 'string') return value;
   try {
@@ -32,7 +34,7 @@ export async function runAgent(
   const messages = filterCompatibleMessages(conversationHistory);
 
   const result = streamText({
-    model: openai('gpt-5-mini'),
+    model: openai(MODEL_NAME),
     system: SYSTEM_PROMPT,
     messages,
     tools,

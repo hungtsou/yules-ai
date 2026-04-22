@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink';
+import { theme } from '../theme.js';
 
 interface ErrorLineProps {
   message: string;
@@ -7,7 +8,9 @@ interface ErrorLineProps {
 export function ErrorLine({ message }: ErrorLineProps) {
   return (
     <Box marginBottom={1}>
-      <Text color="red">Error: {message}</Text>
+      <Text color={theme.colors.error} bold>
+        Error: {message}
+      </Text>
     </Box>
   );
 }
