@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
+import { theme } from '../theme.js';
 
 interface InputBarProps {
   isStreaming: boolean;
@@ -14,19 +15,21 @@ export function InputBar({ isStreaming, onSubmit }: InputBarProps) {
   if (isStreaming) {
     return (
       <Box>
-        <Text color="green">
-          <Spinner type="dots" />
+        <Text>{theme.emoji.typing} </Text>
+        <Text color={theme.colors.primary}>
+          <Spinner type={theme.spinner} />
         </Text>
-        <Text dimColor> Yules is typing…</Text>
+        <Text color={theme.colors.muted}> Yules is typing…</Text>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Text color="cyan">❯ </Text>
+    <Box borderStyle="round" borderColor={theme.colors.primary} paddingX={1}>
+      <Text color={theme.colors.user}>{theme.chars.prompt} </Text>
       <TextInput
         value={value}
+        placeholder="ask anything…"
         onChange={setValue}
         onSubmit={(submitted) => {
           setValue('');

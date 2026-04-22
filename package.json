@@ -45,10 +45,12 @@
     "@ai-sdk/openai": "^3.0.53",
     "@lmnr-ai/lmnr": "^0.8.18",
     "ai": "^6.0.168",
+    "cli-highlight": "^2.1.11",
     "dotenv": "^17.4.2",
     "ink": "^6.8.0",
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
+    "marked": "^18.0.2",
     "react": "^19.2.5"
   }
 }

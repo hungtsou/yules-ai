@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
+import { isValidElement } from 'react';
 import { Box } from 'ink';
 import type { ModelMessage } from 'ai';
 import { Message } from './Message.js';
-import { ToolLine } from './ToolLine.js';
+import { ToolGroup } from './ToolGroup.js';
 import type { InFlightTool } from '../useAgentChat.helpers.js';
 import { previewArgs, summarizeToolOutput } from '../useAgentChat.helpers.js';
 
@@ -51,12 +52,20 @@ function isErrorOutput(output: ToolResultOutput): boolean {
   return output.type === 'error-text' || output.type === 'error-json';
 }
 
+interface PendingToolCall {
+  id: string;
+  name: string;
+  argsPreview: string;
+  pushKey: string;
+}
+
 export function MessageList({
   messages,
   streamingText,
   inFlightTools,
 }: MessageListProps) {
   const nodes: ReactNode[] = [];
+  const pendingByCallId = new Map<string, PendingToolCall>();
 
   messages.forEach((msg, i) => {
     if (msg.role === 'system') return;
@@ -107,17 +116,30 @@ export function MessageList({
             part !== null &&
             'type' in part &&
             part.type === 'tool-call' &&
+            'toolCallId' in part &&
             'toolName' in part &&
             'input' in part &&
+            typeof (part as { toolCallId: unknown }).toolCallId === 'string' &&
             typeof (part as { toolName: unknown }).toolName === 'string'
           ) {
-            const p = part as { toolName: string; input: unknown };
+            const p = part as {
+              toolCallId: string;
+              toolName: string;
+              input: unknown;
+            };
+            const pushKey = `m-${i}-tc-${j}`;
+            pendingByCallId.set(p.toolCallId, {
+              id: p.toolCallId,
+              name: p.toolName,
+              argsPreview: previewArgs(p.input),
+              pushKey,
+            });
             nodes.push(
-              <ToolLine
-                key={`m-${i}-tc-${j}`}
-                mode="call"
+              <ToolGroup
+                key={pushKey}
                 name={p.toolName}
                 argsPreview={previewArgs(p.input)}
+                status="running"
               />,
             );
           }
@@ -135,26 +157,42 @@ export function MessageList({
             part !== null &&
             'type' in part &&
             part.type === 'tool-result' &&
+            'toolCallId' in part &&
             'toolName' in part &&
             'output' in part &&
+            typeof (part as { toolCallId: unknown }).toolCallId === 'string' &&
             typeof (part as { toolName: unknown }).toolName === 'string'
           ) {
             const p = part as {
+              toolCallId: string;
               toolName: string;
               output: ToolResultOutput;
             };
-            nodes.push(
-              <ToolLine
-                key={`m-${i}-tr-${j}`}
-                mode="result"
+            const pending = pendingByCallId.get(p.toolCallId);
+            const replacementKey = pending?.pushKey ?? `m-${i}-tr-${j}`;
+            const replacementIndex = pending
+              ? nodes.findIndex(
+                  (n) => isValidElement(n) && n.key === pending.pushKey,
+                )
+              : -1;
+            const replacement = (
+              <ToolGroup
+                key={replacementKey}
                 name={p.toolName}
+                argsPreview={pending?.argsPreview}
                 status={isErrorOutput(p.output) ? 'error' : 'ok'}
                 summary={summarizeToolOutput(
                   p.toolName,
                   outputToString(p.output),
                 )}
-              />,
+              />
             );
+            if (replacementIndex >= 0) {
+              nodes[replacementIndex] = replacement;
+            } else {
+              nodes.push(replacement);
+            }
+            pendingByCallId.delete(p.toolCallId);
           }
         });
       }
@@ -164,9 +202,8 @@ export function MessageList({
 
   Object.entries(inFlightTools).forEach(([id, entry]) => {
     nodes.push(
-      <ToolLine
+      <ToolGroup
         key={`if-${id}`}
-        mode="inflight"
         name={entry.name}
         argsPreview={entry.argsPreview}
         status={entry.status}
@@ -177,7 +214,12 @@ export function MessageList({
 
   if (streamingText !== '') {
     nodes.push(
-      <Message key="streaming" role="assistant" content={streamingText} />,
+      <Message
+        key="streaming"
+        role="assistant"
+        content={streamingText}
+        streaming
+      />,
     );
   }
 

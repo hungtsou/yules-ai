@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ModelMessage } from 'ai';
-import { runAgent } from '../agent/run.js';
+import { runAgent, MODEL_NAME } from '../agent/run.js';
 import type { InFlightTool } from './useAgentChat.helpers.js';
 import { previewArgs, summarizeToolOutput } from './useAgentChat.helpers.js';
 
@@ -13,6 +13,7 @@ export interface UseAgentChat {
   error: string | null;
   send: (text: string) => void;
   inFlightTools: Record<string, InFlightTool>;
+  modelName: string;
 }
 
 export function useAgentChat(): UseAgentChat {
@@ -96,5 +97,13 @@ export function useAgentChat(): UseAgentChat {
     [messages, status],
   );
 
-  return { messages, streamingText, status, error, send, inFlightTools };
+  return {
+    messages,
+    streamingText,
+    status,
+    error,
+    send,
+    inFlightTools,
+    modelName: MODEL_NAME,
+  };
 }
