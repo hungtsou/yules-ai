@@ -1,0 +1,132 @@
+<svg viewBox="0 0 960 1080" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrowL" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+    <style>
+      .t  { font-size: 13.5px; font-weight: 600; fill: #1e293b; }
+      .s  { font-size: 11.5px; fill: #475569; }
+      .lbl{ font-size: 11px; fill: #64748b; }
+      .edge { stroke: #475569; stroke-width: 1.6; fill: none; }
+      .back { stroke: #94a3b8; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+      .feed { stroke: #94a3b8; stroke-width: 1.2; fill: none; stroke-dasharray: 3 3; }
+    </style>
+  </defs>
+
+  <text x="330" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">/implement — agentic workflow (story path)</text>
+
+  <!-- Legend -->
+  <rect x="590" y="100" width="330" height="132" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="606" y="124" font-size="13" font-weight="700" fill="#0f172a">Legend</text>
+  <rect x="606" y="136" width="18" height="14" rx="3" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="632" y="148" class="s">Orchestrator — control flow, commits, gates</text>
+  <rect x="606" y="160" width="18" height="14" rx="3" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="632" y="172" class="s">Subagent — work-planner / implementer / work-reviewer</text>
+  <rect x="606" y="184" width="18" height="14" rx="3" fill="#fff7ed" stroke="#f59e0b"/>
+  <text x="632" y="196" class="s">🛑 Human checkpoint (workflow pauses)</text>
+  <text x="606" y="220" class="s">↺ Review gates loop back to fix · cap ≈2 passes</text>
+
+  <!-- A: trigger -->
+  <rect x="210" y="60" width="240" height="40" rx="20" fill="#0f172a"/>
+  <text x="330" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">▶  /implement &lt;item&gt;</text>
+  <path class="edge" d="M330,100 L330,120" marker-end="url(#arrow)"/>
+
+  <!-- B: preflight -->
+  <rect x="150" y="120" width="360" height="54" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="330" y="142" text-anchor="middle" class="t">Preflight</text>
+  <text x="330" y="160" text-anchor="middle" class="s">resolve story · Foundation gate · resume check</text>
+  <path class="edge" d="M330,174 L330,194" marker-end="url(#arrow)"/>
+
+  <!-- C: planner -->
+  <rect x="150" y="194" width="360" height="54" rx="8" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="330" y="216" text-anchor="middle" class="t">work-planner — decompose</text>
+  <text x="330" y="234" text-anchor="middle" class="s">→ spec.md · tasks.md · follow-ups.md + dependencies</text>
+  <path class="edge" d="M330,248 L330,268" marker-end="url(#arrow)"/>
+
+  <!-- D: dependency gate -->
+  <rect x="150" y="268" width="360" height="54" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="330" y="290" text-anchor="middle" class="t">Dependency gate</text>
+  <text x="330" y="308" text-anchor="middle" class="s">prerequisite stories must be [x] done</text>
+  <path class="edge" d="M330,322 L330,342" marker-end="url(#arrow)"/>
+
+  <!-- E: checkpoint -->
+  <rect x="150" y="342" width="360" height="54" rx="8" fill="#fff7ed" stroke="#f59e0b"/>
+  <text x="330" y="364" text-anchor="middle" class="t">🛑 Checkpoint — approve task breakdown</text>
+  <text x="330" y="382" text-anchor="middle" class="s">workflow waits for you</text>
+  <path class="edge" d="M330,396 L330,448" marker-end="url(#arrow)"/>
+
+  <!-- per-task loop container -->
+  <rect x="110" y="416" width="440" height="566" rx="12" fill="none" stroke="#cbd5e1" stroke-dasharray="6 5"/>
+  <text x="130" y="438" font-size="11.5" font-weight="700" fill="#64748b">PER-TASK LOOP — repeat for each task in tasks.md</text>
+
+  <!-- F: implementer build -->
+  <rect x="150" y="450" width="360" height="54" rx="8" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="330" y="472" text-anchor="middle" class="t">task-implementer · build</text>
+  <text x="330" y="490" text-anchor="middle" class="s">logic (test-first) → data → UI → wire</text>
+  <path class="edge" d="M330,504 L330,522" marker-end="url(#arrow)"/>
+
+  <!-- G: green check -->
+  <rect x="150" y="522" width="360" height="44" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="330" y="549" text-anchor="middle" class="t">✅ Green check — test · tsc · lint</text>
+  <path class="edge" d="M330,566 L330,584" marker-end="url(#arrow)"/>
+
+  <!-- H: reviewer gate 1 -->
+  <rect x="150" y="584" width="360" height="54" rx="8" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="330" y="606" text-anchor="middle" class="t">work-reviewer · Gate #1</text>
+  <text x="330" y="624" text-anchor="middle" class="s">triage High / Medium / Low</text>
+  <path class="edge" d="M330,638 L330,666" marker-end="url(#arrow)"/>
+
+  <!-- I: implementer e2e -->
+  <rect x="150" y="666" width="360" height="44" rx="8" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="330" y="693" text-anchor="middle" class="t">task-implementer · e2e (Playwright)</text>
+  <path class="edge" d="M330,710 L330,728" marker-end="url(#arrow)"/>
+
+  <!-- J: reviewer gate 2 -->
+  <rect x="150" y="728" width="360" height="54" rx="8" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="330" y="750" text-anchor="middle" class="t">work-reviewer · Gate #2</text>
+  <text x="330" y="768" text-anchor="middle" class="s">wired feature + e2e</text>
+  <path class="edge" d="M330,782 L330,808" marker-end="url(#arrow)"/>
+
+  <!-- K: approve gate -->
+  <rect x="150" y="808" width="360" height="54" rx="8" fill="#fff7ed" stroke="#f59e0b"/>
+  <text x="330" y="830" text-anchor="middle" class="t">🛑 Approve gate</text>
+  <text x="330" y="848" text-anchor="middle" class="s">summary · unit + e2e results · deferred items</text>
+  <path class="edge" d="M330,862 L330,890" marker-end="url(#arrow)"/>
+
+  <!-- L: commit -->
+  <rect x="150" y="890" width="360" height="54" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="330" y="912" text-anchor="middle" class="t">Commit (Conventional) + check off task</text>
+  <text x="330" y="930" text-anchor="middle" class="s">push only after approval</text>
+
+  <!-- exit to done -->
+  <path class="edge" d="M330,944 L330,1006" marker-end="url(#arrow)"/>
+
+  <!-- M: done -->
+  <rect x="225" y="1006" width="210" height="40" rx="20" fill="#16a34a"/>
+  <text x="330" y="1031" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">✓  Story complete</text>
+
+  <!-- back edge: next task (far left) -->
+  <path class="back" d="M150,917 L86,917 L86,477 L150,477" marker-end="url(#arrowL)"/>
+  <text x="74" y="700" class="lbl" transform="rotate(-90 74 700)" text-anchor="middle">next task</text>
+
+  <!-- back edge: Gate #1 BLOCK -> fix (right, inside loop) -->
+  <path class="back" d="M510,611 L556,611 L556,477 L510,477" marker-end="url(#arrowL)"/>
+  <text x="572" y="545" class="lbl" transform="rotate(90 572 545)" text-anchor="middle">BLOCK → fix (≤2)</text>
+
+  <!-- rules sidebar -->
+  <rect x="600" y="650" width="320" height="172" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="5 4"/>
+  <text x="616" y="676" font-size="13" font-weight="700" fill="#0f172a">.claude/rules/</text>
+  <text x="616" y="700" class="s">business-rules.md  — overlap · presence · proximity</text>
+  <text x="616" y="720" class="s">data-layer.md  — Drizzle · zod · actions · migrations</text>
+  <text x="616" y="740" class="s">ui.md  — shadcn · server/client · fidelity</text>
+  <text x="616" y="760" class="s">testing.md  — Vitest test-first · Playwright</text>
+  <text x="616" y="792" class="lbl">loaded by the implementer &amp; reviewer subagents</text>
+  <text x="616" y="808" class="lbl">single source of truth → AGENTS.md §6</text>
+
+  <!-- feed arrows from rules into implementer build &amp; reviewer -->
+  <path class="feed" d="M600,690 C560,660 545,560 512,505" marker-end="url(#arrowL)"/>
+  <path class="feed" d="M600,700 C575,670 560,640 512,615" marker-end="url(#arrowL)"/>
+</svg>
